@@ -22,6 +22,7 @@ if (!(Get-Command winget -ErrorAction SilentlyContinue)) {
 $apps = @(
     "Google.Chrome",
     "Microsoft.VisualStudioCode",
+    "JanDeDobbeleer.OhMyPosh",
     "7zip.7zip",
     "Zoom.Zoom",
     "Tencent.WeChat",
@@ -37,13 +38,6 @@ foreach ($app in $apps) {
     winget install --id $app -e --accept-source-agreements --accept-package-agreements
 }
 
-# --- 4. Windows Update ---
-Write-Host "Installing updates..."
-Install-PackageProvider -Name NuGet -Force
-Install-Module -Name PSWindowsUpdate -Force -Confirm:$false
-Import-Module PSWindowsUpdate
-Get-WindowsUpdate -Install -AcceptAll -AutoReboot
-
 # --- 5. Customization ---
 # Example: Create workspace folders
 New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\Projects"
@@ -52,9 +46,12 @@ New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\Tools"
 # Example: Set PowerShell profile
 $profileContent = @"
 # Custom PowerShell Profile
-Import-Module oh-my-posh
-Set-PoshPrompt -Theme paradox
+oh-my-posh init pwsh | Invoke-Expression
+#Import-Module oh-my-posh
+oh-my-posh init pwsh --config ~/jandedobbeleer.omp.json | Invoke-Expression
+#Set-PoshPrompt -Theme paradox
 "@
+oh-my-posh font install meslo
 New-Item -ItemType File -Force -Path $PROFILE
 Set-Content -Path $PROFILE -Value $profileContent
 
