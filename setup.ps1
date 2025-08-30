@@ -26,7 +26,6 @@ $apps = @(
     "Zoom.Zoom",
     "Tencent.WeChat",
     "SumatraPDF.SumatraPDF",    # Sumatra PDF
-    "PDFGear.PDFGear",          # PDFGear
     "DigitalScholar.Zotero",    # Zotero
     "Nutstore.Nutstore",        # Nutstore (网盘)
     "Apple.iCloud",             # iCloud
