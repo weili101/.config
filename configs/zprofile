@@ -1,0 +1,6 @@
+eval "$(/opt/homebrew/bin/brew shellenv)"
+
+# Added by Obsidian, if installed.
+if [ -d "/Applications/Obsidian.app" ]; then
+  export PATH="$PATH:/Applications/Obsidian.app/Contents/MacOS"
+fi

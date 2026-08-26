@@ -1,0 +1,41 @@
+# ──────────────────────────────────────────────
+# Ghostty Configuration
+# Location: ~/Library/Application Support/com.mitchellh.ghostty/config.ghostty
+# ──────────────────────────────────────────────
+
+# Theme
+# Run: ghostty +list-themes | grep -i catppuccin
+# to verify the exact name on your system
+# theme = Catppuccin Mocha
+theme = Catppuccin Latte
+# theme = Atom One Light
+
+cursor-style = block
+cursor-color = cell-foreground
+cursor-text = cell-background
+
+# Font
+font-family = Fira Code
+font-size = 16
+font-thicken = true
+
+# Appearance
+background-opacity = 0.9
+background-blur-radius = 20
+macos-titlebar-style = transparent
+
+# Window
+window-padding-x = 8
+window-padding-y = 4
+
+# Behavior
+shell-integration = zsh
+mouse-hide-while-typing = true
+link-url = true
+
+# Quick Terminal (Quake-style dropdown)
+# Requires Accessibility permission: System Settings > Privacy & Security > Accessibility
+keybind = global:opt+grave_accent=toggle_quick_terminal
+quick-terminal-animation-duration = 0
+# quick-terminal-position = bottom
+quick-terminal-size = 35%, 50%
