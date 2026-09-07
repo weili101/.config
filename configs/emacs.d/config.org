@@ -1,0 +1,384 @@
+#+TITLE: Emacs Configuration
+#+AUTHOR: wei
+#+PROPERTY: header-args:emacs-lisp :tangle yes :lexical t
+#+STARTUP: overview
+
+This is my literate Emacs configuration.  It is loaded by =init.el= via
+=org-babel-load-file=, which tangles all the =emacs-lisp= source blocks below
+into =config.el= and evaluates them.
+
+* Lexical binding
+
+The tangled =config.el= needs a =lexical-binding= cookie on its very first
+line.  Org's =:lexical t= header only controls in-buffer evaluation, not the
+tangled output, so without this the file loads under dynamic binding and
+closures (e.g. the dashboard buttons) break.
+
+#+begin_src emacs-lisp :padline no
+;; -*- lexical-binding: t; -*-
+#+end_src
+
+* Server
+Start the Emacs server so =emacsclient= can connect.
+
+#+begin_src emacs-lisp
+(require 'server)
+(unless (server-running-p)
+  (server-start))
+#+end_src
+
+* General editing behavior
+
+#+begin_src emacs-lisp
+;; No auto-resizing of frames.
+;; (setq frame-inhibit-implied-resize t)
+
+;; Bell sounds from my text editor are no fun.
+;; (setq ring-bell-function #'ignore)
+
+;; Auto-revert dired (the directory editor) when revisiting
+;; directories, since they may have changed underneath.
+(setq dired-auto-revert-buffer t)
+
+;; Tab does quite a bit of stuff in Emacs, so it's helpful to have it
+;; attempt completions when it's not doing something else.
+(setq tab-always-indent 'complete)
+
+;; Make certain mouse commands more intuitive.
+(setq mouse-yank-at-point t)
+
+;; Emacs Lisp files can be byte-compiled into `.elc' files, which run
+;; faster.  By default Emacs prefers `.elc' to `.el' in all cases,
+;; causing occasional annoyances if you make a change to an Emacs Lisp
+;; file but forget to byte-compile it.  `load-prefer-newer' always
+;; prefers the last-edited file, preventing this problem.
+(setq load-prefer-newer t)
+#+end_src
+
+* Line numbers and appearance
+
+#+begin_src emacs-lisp
+;; Display line numbers in programming language modes.
+(add-hook 'latex-mode-hook #'display-line-numbers-mode)
+(add-hook 'prog-mode-hook #'display-line-numbers-mode)
+;; (global-display-line-numbers-mode 1)
+;; (set-face-attribute 'default nil
+;;                     :family "JetBrains Mono"
+;;                     :height 150
+;;                     :weight 'normal)
+
+;; (setq catppuccin-flavor 'latte) ; or 'latte, 'macchiato, or 'mocha, frappel
+;; (load-theme 'catppuccin t)
+;; (catppuccin-set-color 'text "#000000" 'latte)
+;; (catppuccin-reload)
+#+end_src
+
+* History
+
+#+begin_src emacs-lisp
+;; Save history
+(savehist-mode 1)
+#+end_src
+
+* Dashboard
+
+A simple startup dashboard with pinned paths and bookmarks.
+
+#+begin_src emacs-lisp
+(defvar my/pinned-paths
+  '(
+    ("Config"     . "~/.emacs.d/config.org")
+    ("OneDrive-Work"         . " ~/OneDrive/1000-Work/"))
+   )
+
+(defun my/insert-file-button (label path)
+  (insert-button label
+                 'action (lambda (_btn) (find-file path))
+                 'follow-link t
+                 'face 'link)
+  (insert "\n"))
+
+(defun my/dashboard-refresh ()
+  (interactive)
+  (let ((buf (get-buffer-create "*dashboard*")))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert (propertize "Emacs\n\n" 'face '(:height 1.5 :weight bold)))
+
+        (when my/pinned-paths
+          (insert (propertize "Pinned\n" 'face 'bold))
+          (dolist (p my/pinned-paths)
+            (my/insert-file-button (car p) (cdr p))))
+
+        (insert (propertize "\nBookmarks\n" 'face 'bold))
+        (require 'bookmark)
+        (bookmark-maybe-load-default-file)
+        (if (bookmark-all-names)
+            (dolist (bm (bookmark-all-names))
+              (insert-button bm
+                             'action (lambda (_btn) (bookmark-jump bm))
+                             'follow-link t
+                             'face 'link)
+              (insert "\n"))
+          (insert (propertize "  (none yet — C-x r m to add one)\n" 'face 'shadow)))
+
+        (goto-char (point-min))
+        (special-mode)
+        (local-set-key (kbd "g") #'my/dashboard-refresh)))
+    buf))
+
+(setq initial-buffer-choice #'my/dashboard-refresh)
+#+end_src
+
+* Org-mode
+
+#+begin_src emacs-lisp
+(defun my/fill-whole-buffer ()
+  "Refill the entire buffer using the current fill-column."
+  (interactive)
+  (save-excursion
+    (fill-region (point-min) (point-max))))
+
+;; Bind it to a convenient shortcut, like C-c M-q
+(global-set-key (kbd "C-c M-q") 'my/fill-whole-buffer)
+#+end_src
+
+* Package management
+
+Initialize package.el for loading third-party packages.  Also set up
+package.el to accept packages from the MELPA package archive, the largest
+package repository for Emacs.
+
+#+begin_src emacs-lisp
+(require 'package)
+
+(setq package-archives
+      '(("gnu"    . "https://elpa.gnu.org/packages/")
+        ("nongnu" . "https://elpa.nongnu.org/nongnu/")
+        ("melpa"  . "https://melpa.org/packages/")))
+
+;; MELPA has more packages than melpa-stable, and is what most configs use.
+;; Priority controls which version wins if a package exists in multiple archives.
+;; (setq package-archive-priorities
+;;       '(("gnu"    . 10)
+;;         ("nongnu" . 5)
+;;         ("melpa"  . 0)))
+
+(package-initialize)
+
+(setq use-package-always-ensure t)
+
+(unless package-archive-contents
+  (package-refresh-contents))
+#+end_src
+
+* Theme
+
+#+begin_src emacs-lisp
+(use-package catppuccin-theme
+  :init
+  (setq catppuccin-flavor 'latte)   ;; 'latte 'frappe 'macchiato 'mocha
+  :config
+  (load-theme 'catppuccin :no-confirm)
+  (catppuccin-set-color 'text "#000000" 'latte)
+  )
+#+end_src
+
+* Completion
+
+#+begin_src emacs-lisp
+;; Enable Vertico.
+(use-package vertico
+  :ensure t
+  :custom
+  (vertico-scroll-margin 0) ;; Different scroll margin
+  (vertico-count 20) ;; Show more candidates
+  (vertico-resize t) ;; Grow and shrink the Vertico minibuffer
+  (vertico-cycle t) ;; Enable cycling for `vertico-next/previous'
+  :init
+  (vertico-mode)
+  )
+
+(use-package orderless
+  :ensure t
+  :custom
+  (completion-styles '(orderless basic))
+  (completion-category-overrides '((file (styles partial-completion))))
+  )
+#+end_src
+
+* Terminal
+
+#+begin_src emacs-lisp
+(use-package ghostel
+  :ensure t)
+#+end_src
+
+* LaTeX
+
+#+begin_src emacs-lisp
+(use-package eglot
+  :hook (latex-mode . eglot-ensure))
+
+;; Make C-c C-c run the Makefile in LaTeX buffers instead of built-in tex-compile.
+;; (with-eval-after-load 'tex-mode
+;;   (define-key latex-mode-map (kbd "C-c C-c") #'recompile))
+;; (add-hook 'latex-mode-hook
+;;           (lambda () (setq-local compile-command "make ")))
+
+;; C-c C-v: open the PDF built from the current LaTeX buffer.
+(defun my/latex-view-pdf ()
+  "Open the PDF built from the current LaTeX buffer."
+  (interactive)
+  (let ((pdf (concat (file-name-sans-extension buffer-file-name) ".pdf")))
+    (if (file-exists-p pdf)
+        (find-file-other-window pdf)
+      (message "No PDF yet: %s" pdf))))
+
+(with-eval-after-load 'tex-mode
+  (define-key latex-mode-map (kbd "C-c C-v") #'my/latex-view-pdf))
+
+;; C-c C-g: forward SyncTeX search — jump from the current .tex line to the
+;; matching spot in the PDF (pdf-tools).  pdf-tools' own `pdf-sync-forward-search'
+;; requires AUCTeX, so this calls the poppler backend directly with base.pdf.
+(defun my/latex-forward-search ()
+  "Jump from the current LaTeX line to the corresponding place in the PDF."
+  (interactive)
+  (require 'pdf-tools)
+  (let* ((tex (buffer-file-name))
+         (pdf (concat (file-name-sans-extension tex) ".pdf"))
+         (line (line-number-at-pos nil t))
+         (column (current-column)))
+    (unless (file-exists-p pdf)
+      (user-error "No PDF yet: %s (compile first)" pdf))
+    (let-alist (pdf-info-synctex-forward-search tex line column pdf)
+      (let ((buffer (or (find-buffer-visiting pdf)
+                        (find-file-noselect pdf))))
+        (with-selected-window (display-buffer buffer)
+          (pdf-util-assert-pdf-window)
+          (when .page
+            (pdf-view-goto-page .page (selected-window))
+            (let ((y1 (nth 1 .edges)))
+              (when y1
+                (pdf-util-tooltip-arrow
+                 (round (* y1 (cdr (pdf-view-image-size)))))))))))))
+
+(with-eval-after-load 'tex-mode
+  (define-key latex-mode-map (kbd "C-c C-g") #'my/latex-forward-search))
+#+end_src
+
+* PDF tools
+
+#+begin_src emacs-lisp
+;; Auto-refresh an open PDF whenever it is rewritten on disk (pdf-tools).
+(add-hook 'pdf-view-mode-hook #'auto-revert-mode)
+
+;; (use-package tex :ensure auctex
+;;   :config
+;;   (setq TeX-auto-save t
+;;         TeX-parse-self t
+;;         TeX-source-correlate-mode t
+;;         TeX-source-correlate-start-server t)
+;;   (setq-default TeX-master nil))
+
+(use-package pdf-tools
+  :config
+  (pdf-tools-install)
+  (setq-default pdf-view-display-size 'fit-page)
+  (setq pdf-view-continuous t))
+
+(setq TeX-view-program-selection '((output-pdf "PDF Tools"))
+      TeX-view-program-list '(("PDF Tools" TeX-pdf-tools-sync-view)))
+
+;; (use-package flycheck
+
+;;   :ensure t
+;;   :hook (LaTeX-mode . flycheck-mode))
+
+;; (use-package visual-fill-column
+;;   :hook ((LaTeX-mode . visual-line-mode)
+;;          (visual-line-mode . visual-fill-column-mode))
+;;   :custom
+;;   (visual-fill-column-width 90)
+;;   (visual-fill-column-center-text nil))
+
+(setq-default fill-column 80)
+#+end_src
+
+* Markdown
+
+#+begin_src emacs-lisp
+(use-package markdown-mode
+  :ensure t
+  :mode (("README\\.md\\'" . gfm-mode)
+         ("\\.\\(?:md\\|markdown\\|mkd\\|mdown\\|mkdn\\|mdwn\\)\\'" . markdown-mode))
+  :init (setq markdown-command "pandoc"))
+
+(setq markdown-enable-math t)
+
+(setq livemd-math-scale 1.8)
+(load (expand-file-name "livemd.el" user-emacs-directory))
+(add-hook 'markdown-mode-hook #'livemd-mode)
+
+;; Per-buffer toggle for live rendering.  Bound in `markdown-mode-map' (not
+;; livemd's own map) so it can turn the mode back ON when it is off.
+;; `C-c l' is in the user-reserved key space, so it clobbers nothing.
+;; (Use "C-c C-l" instead if you prefer, but that overrides `markdown-insert-link'.)
+(with-eval-after-load 'markdown-mode
+  (define-key markdown-mode-map (kbd "C-c l") #'livemd-mode))
+#+end_src
+
+* Sync-scroll
+
+Keep windows that show the same file (a buffer and its indirect clones)
+aligned by BUFFER POSITION.  Unlike =scroll-all-mode= this follows
+mouse/trackpad too, and aligns by content even when one window is taller
+(rendered equation images).  Toggle with =C-c s=.
+
+#+begin_src emacs-lisp
+(defvar my/sync-scroll--busy nil)
+
+(defun my/sync-scroll--run (win start)
+  "Align other windows on the same underlying file to START."
+  (when (and my/sync-scroll-mode (not my/sync-scroll--busy))
+    (let* ((my/sync-scroll--busy t)
+           (b (window-buffer win))
+           (root (or (buffer-base-buffer b) b)))
+      (dolist (w (window-list nil 'no-mini))
+        (unless (eq w win)
+          (let* ((wb (window-buffer w))
+                 (wroot (or (buffer-base-buffer wb) wb)))
+            (when (eq wroot root)               ; same file text
+              (set-window-start w start t)))))))) ; t = don't force, no error
+
+(define-minor-mode my/sync-scroll-mode
+  "Globally keep windows showing the same file aligned by position."
+  :global t
+  (if my/sync-scroll-mode
+      (add-hook 'window-scroll-functions #'my/sync-scroll--run)
+    (remove-hook 'window-scroll-functions #'my/sync-scroll--run)))
+
+(global-set-key (kbd "C-c s") #'my/sync-scroll-mode)
+#+end_src
+
+* Customize
+
+Variables and faces written by the Custom system.
+
+#+begin_src emacs-lisp
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+   '(catppuccin-theme ghostel markdown-mode orderless pdf-tools vertico
+		      visual-fill-column)))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
+#+end_src

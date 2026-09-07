@@ -76,23 +76,12 @@ install_homebrew() {
   run brew bundle --file "$ROOT/Brewfile"
 }
 
-install_doom_emacs() {
-  run mkdir -p "$HOME/.config"
-
-  if [ ! -d "$HOME/.config/emacs/.git" ]; then
-    run git clone --depth 1 https://github.com/doomemacs/doomemacs "$HOME/.config/emacs"
-  fi
-
-  run mkdir -p "$HOME/.config/doom"
-  install_file "$ROOT/configs/doom/init.el" "$HOME/.config/doom/init.el"
-  install_file "$ROOT/configs/doom/config.el" "$HOME/.config/doom/config.el"
-  install_file "$ROOT/configs/doom/packages.el" "$HOME/.config/doom/packages.el"
-
-  if [ -x "$HOME/.config/emacs/bin/doom" ]; then
-    run "$HOME/.config/emacs/bin/doom" sync
-  else
-    echo "Doom CLI not found yet; run ~/.config/emacs/bin/doom install then doom sync."
-  fi
+install_vanilla_emacs() {
+  run mkdir -p "$HOME/.emacs.d"
+  install_file "$ROOT/configs/emacs.d/early-init.el" "$HOME/.emacs.d/early-init.el"
+  install_file "$ROOT/configs/emacs.d/init.el" "$HOME/.emacs.d/init.el"
+  install_file "$ROOT/configs/emacs.d/config.org" "$HOME/.emacs.d/config.org"
+  install_file "$ROOT/configs/emacs.d/livemd.el" "$HOME/.emacs.d/livemd.el"
 }
 
 main() {
@@ -110,7 +99,7 @@ main() {
   install_file "$ROOT/configs/ghostty/config.ghostty" "$HOME/Library/Application Support/com.mitchellh.ghostty/config.ghostty"
   install_file "$ROOT/configs/nvim/init.lua" "$HOME/.config/nvim/init.lua"
 
-  install_doom_emacs
+  install_vanilla_emacs
 
   if [ "$APPLY_MOS" -eq 1 ]; then
     run bash "$ROOT/configs/mos-defaults.sh"
@@ -123,6 +112,7 @@ main() {
   echo "  1. Open Ghostty once and grant Accessibility for the global quick-terminal hotkey."
   echo "  2. Open Mos once and grant Accessibility/Input Monitoring if macOS asks."
   echo "  3. Run :Lazy sync in Neovim if plugins did not install on first launch."
+  echo "  4. Open Emacs once so package.el can install packages from config.org."
 }
 
 main "$@"

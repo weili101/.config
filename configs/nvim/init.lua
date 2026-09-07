@@ -1,7 +1,7 @@
 -- ~/.config/nvim/init.lua
 -- Minimal VS Code-like Neovim config:
 -- Python LSP, LaTeX/VimTeX, file tree, outline, bottom terminal, git, fuzzy find.
--- Leader = space, similar to Doom Emacs SPC.
+-- Leader = space.
 
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "

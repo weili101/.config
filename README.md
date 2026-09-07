@@ -9,14 +9,15 @@ a quick path to rebuild it on a fresh macOS machine.
   background blur, zsh shell integration, and a global Option-Backtick quick
   terminal.
 - Shell: zsh with Homebrew shellenv, Conda, NVM, zsh autosuggestions,
-  zsh syntax highlighting, zoxide, yazi cd integration, Starship, Doom CLI on
-  PATH, and `EDITOR=nvim`.
+  zsh syntax highlighting, zoxide, yazi cd integration, Starship, and
+  `EDITOR=nvim`.
 - Neovim: Lua-only `lazy.nvim` setup with Catppuccin, lualine, which-key,
   Treesitter, Telescope, Neo-tree, Aerial, Gitsigns, Comment.nvim, ToggleTerm,
   Trouble, Pyright/Ruff LSP, cmp completion, render-markdown, and VimTeX.
-- Emacs: Doom Emacs using Evil, Vertico, Corfu/Orderless, Treemacs, Ghostel,
-  Magit, PDF tools, tree-sitter, LaTeX, Markdown, Org, Python, macOS support,
-  Catppuccin theme, Fira Code 18, and custom Org/PDF/Dired bindings.
+- Emacs: vanilla Emacs in `~/.emacs.d`, using a literate `config.org`,
+  Catppuccin Latte, Vertico, Orderless, Ghostel, Eglot for LaTeX, PDF Tools,
+  Markdown mode, live Markdown math rendering, a simple dashboard, and custom
+  LaTeX/PDF helpers.
 - Utility apps: Mos smooth/reverse scrolling settings, plus Aerospace, AlDente,
   Mounty, fonts, BasicTeX, Ghostty, and Emacs.app via Homebrew casks.
 
@@ -58,17 +59,13 @@ After the script:
 2. Open Mos and grant Accessibility/Input Monitoring if prompted.
 3. Open Neovim. `lazy.nvim` should bootstrap itself; run `:Lazy sync` if a plugin
    needs a second pass.
-4. Open Emacs. If Doom asks for initialization, run:
-
-```sh
-~/.config/emacs/bin/doom install
-~/.config/emacs/bin/doom sync
-```
+4. Open Emacs once. The vanilla config uses `package.el`; it will refresh
+   package archives and install packages declared with `use-package` as needed.
 
 ## Important Notes
 
 - This repo intentionally does not store API keys, shell history, SSH keys,
-  caches, generated Doom package state, or plugin lock/cache directories.
+  caches, generated Emacs package state, or plugin lock/cache directories.
 - The zsh template is sanitized from the live machine and avoids hard-coded
   `/Users/wei` paths where possible.
 - Homebrew dependencies are intentionally lean and based on current leaf
@@ -83,8 +80,9 @@ After the script:
 - `configs/zshrc`: interactive zsh setup.
 - `configs/ghostty/config.ghostty`: Ghostty terminal config.
 - `configs/nvim/init.lua`: Neovim configuration.
-- `configs/doom/init.el`: Doom module selection.
-- `configs/doom/config.el`: Doom user settings and custom commands.
-- `configs/doom/packages.el`: Extra Doom packages.
+- `configs/emacs.d/early-init.el`: vanilla Emacs early startup settings.
+- `configs/emacs.d/init.el`: vanilla Emacs bootstrap.
+- `configs/emacs.d/config.org`: literate vanilla Emacs configuration.
+- `configs/emacs.d/livemd.el`: live Markdown/math rendering helper.
 - `configs/mos-defaults.sh`: Mos defaults settings.
 - `scripts/bootstrap-mac.sh`: one-command bootstrap installer.
